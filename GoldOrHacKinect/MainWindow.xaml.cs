@@ -101,6 +101,7 @@ namespace Microsoft.Samples.Kinect.DepthBasics
 
         #region kinect_Clasique
 
+        // ReSharper disable once UnusedMember.Local
         private void DemarageClassique()
         {
 

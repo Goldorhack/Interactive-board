@@ -445,11 +445,11 @@ namespace Microsoft.Samples.Kinect.DepthBasics.WPF_Tools
 
             string clickPositionString = msg_01 + " " + msg_02 + " click ";
 
-            Console.WriteLine(clickPositionString);
+            //Console.WriteLine(clickPositionString);
 
             string cmdTitle = GetAt(this.LaListeDesCommandes, num_Instruction);
 
-            this.m_connection.ExecuteFromTitreCmd(cmdTitle);
+            this.m_connection.ExecuteFromTitreCmd_And_Msg(cmdTitle, clickPositionString);
 
 
             //this.m_connection.Ecrire();
