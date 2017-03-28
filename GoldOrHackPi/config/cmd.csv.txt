@@ -1,0 +1,2 @@
+up;msg.php?msg=up
+down;msg.php?msg=down

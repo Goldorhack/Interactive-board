@@ -1,0 +1,4 @@
+up;sudo /usr/bin/python2.7 /home/pi/Desktop/AZURIL/hat/hatSay.py up 2>&1 
+down;sudo /usr/bin/python2.7 /home/pi/Desktop/AZURIL/hat/hatSay.py down 2>&1 
+uname;uname -a 
+ 
