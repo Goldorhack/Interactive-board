@@ -65,7 +65,6 @@ namespace Microsoft.Samples.Kinect.DepthBasics.Cs_Kinect.Wpf_Kinect
 
             this.m_kinectTools.Refresh += KinectTools_Refresh;
 
-
             this.m_failOverWindow = new FailOverWindow(this, goHInterface, rectangle);
 
             window.Hide();
@@ -90,6 +89,7 @@ namespace Microsoft.Samples.Kinect.DepthBasics.Cs_Kinect.Wpf_Kinect
 
             if (m_failOverWindow != null && value == Properties.Resources.SensorNotAvailableStatusText)
             {
+                this.Hide();
                 m_failOverWindow.Show();
             }
 

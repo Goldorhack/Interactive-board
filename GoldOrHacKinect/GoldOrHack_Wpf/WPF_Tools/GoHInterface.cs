@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -115,6 +116,8 @@ namespace Microsoft.Samples.Kinect.DepthBasics.WPF_Tools
         private readonly Typeface m_typeface;
 
         private readonly SolidColorBrush m_noir_Transparent;
+        private readonly ImageSource m_hand_Transparent_Img;
+        private readonly ImageSource m_fist_Transparent_Img;
 
         public ConcurrentBag<string> LaListeDesCommandes { get; set; }
 
@@ -129,10 +132,29 @@ namespace Microsoft.Samples.Kinect.DepthBasics.WPF_Tools
 
         private void RefreshMenu()
         {
-            string[] ts = m_connection.GetMenu();
+            if (!this.m_connection.IsBusy())
+            {
+                string[] ts = m_connection.GetMenu();
 
-            this.LaListeDesCommandes = new ConcurrentBag<string>(Inverser(ts));
+                this.LaListeDesCommandes = new ConcurrentBag<string>(Inverser(ts));
+            }
+            else
+            {
+                this.LaListeDesCommandes = new ConcurrentBag<string>();
+            }
         }
+
+
+        private static ImageSource Get_Img_From_Bitmap(Bitmap bitmap01)
+        {
+            IntPtr handle = bitmap01.GetHbitmap();
+
+            ImageSource img02 = Imaging.CreateBitmapSourceFromHBitmap(handle, IntPtr.Zero, Int32Rect.Empty,
+                BitmapSizeOptions.FromEmptyOptions());
+
+            return img02;
+        }
+
 
         public GoHInterface(bool isBackground)
         {
@@ -146,33 +168,25 @@ namespace Microsoft.Samples.Kinect.DepthBasics.WPF_Tools
             try
             {
                 this.m_img = Get_Img_From_Bitmap(Resource1.kinect);
+                this.m_hand_Transparent_Img = Get_Img_From_Bitmap(Resource1.hand_transparent);
+                this.m_fist_Transparent_Img = Get_Img_From_Bitmap(Resource1.fist_transparent);
             }
             catch (Exception ex)
             {
                 Outil.Ecrire_Erreur(ex);
                 
-                //try
-                //{
-                //    this.m_img = new BitmapImage(new Uri(IMG_BACKGROUND));
-                //}
-                //catch (Exception ex2)
-                //{
-                //    Outil.Ecrire_Erreur(ex2);
-                //    throw;
-                //}
-
                 throw;
             }
 
 
 
             string[] ts_Lines;
-            
+
             string filePath;
 
             try
             {
-                
+
                 if (File.Exists(CONFIG_NAME))
                 {
                     filePath = CONFIG_NAME;
@@ -232,16 +246,6 @@ namespace Microsoft.Samples.Kinect.DepthBasics.WPF_Tools
 
         }
 
-        private static ImageSource Get_Img_From_Bitmap(Bitmap bitmap01)
-        {
-            IntPtr handle = bitmap01.GetHbitmap();
-
-            ImageSource img02 = Imaging.CreateBitmapSourceFromHBitmap(handle, IntPtr.Zero, Int32Rect.Empty,
-                BitmapSizeOptions.FromEmptyOptions());
-
-            return img02;
-        }
-
         public void Dispose()
         {
             this.m_connection.Dispose();
@@ -284,6 +288,7 @@ namespace Microsoft.Samples.Kinect.DepthBasics.WPF_Tools
 
             //Console.WriteLine(@" debut AddVisualInterface ");
 
+            RefreshMenu();
 
             if (this.IsBackground)
             {
@@ -292,45 +297,50 @@ namespace Microsoft.Samples.Kinect.DepthBasics.WPF_Tools
                 dc.DrawImage(m_img, zoneDessinRectangle);
             }
 
-            int haut = (int)m_center.Y;
-            int mi_Hauteur = (int)(zoneDessinRectangle.Height / 2);
-            int bas = (int)(zoneDessinRectangle.Height - m_center.Y);
-            int gauche = (int)m_center.X;
-            int droite = (int)(zoneDessinRectangle.Width - m_center.X);
+            if (this.LaListeDesCommandes.Count >= 1)
+            {
+
+                int haut = (int)m_center.Y;
+                int mi_Hauteur = (int)(zoneDessinRectangle.Height / 2);
+                int bas = (int)(zoneDessinRectangle.Height - m_center.Y);
+                int gauche = (int)m_center.X;
+                int droite = (int)(zoneDessinRectangle.Width - m_center.X);
 
 
 
 
-            dc.DrawEllipse(m_noir_Transparent, this.m_pen, new Point(gauche, haut), this.m_radiusX, this.m_radiusY);
-            dc.DrawEllipse(m_noir_Transparent, this.m_pen, new Point(droite, haut), this.m_radiusX, this.m_radiusY);
-            dc.DrawEllipse(m_noir_Transparent, this.m_pen, new Point(gauche, mi_Hauteur), this.m_radiusX, this.m_radiusY);
-            dc.DrawEllipse(m_noir_Transparent, this.m_pen, new Point(droite, mi_Hauteur), this.m_radiusX, this.m_radiusY);
-            dc.DrawEllipse(m_noir_Transparent, this.m_pen, new Point(gauche, bas), this.m_radiusX, this.m_radiusY);
-            dc.DrawEllipse(m_noir_Transparent, this.m_pen, new Point(droite, bas), this.m_radiusX, this.m_radiusY);
-
-
-            FormattedText[] t_FormattedTexts = this.LaListeDesCommandes.Select(GetFormattedText).ToArray();
-
-            haut = Y_DECALAGE_TEXT_VERS_BAS;
-            mi_Hauteur = (int)(zoneDessinRectangle.Height / 2 - Y_DECALAGE_TEXT_VERS_HAUT_02);
-            bas = (int)(zoneDessinRectangle.Height - Y_DECALAGE_TEXT_VERS_HAUT_03);
-            gauche = X_DECALAGE_TEXT_VERS_DROITE;
-            droite = (int)(zoneDessinRectangle.Width - X_DECALAGE_TEXT_VERS_GAUCHE);
-
-            //FormattedText s0 = GetAt(t_FormattedTexts, 0);
-            //FormattedText s5 = GetAt(t_FormattedTexts, 5);
+                dc.DrawEllipse(m_noir_Transparent, this.m_pen, new Point(gauche, haut), this.m_radiusX, this.m_radiusY);
+                dc.DrawEllipse(m_noir_Transparent, this.m_pen, new Point(droite, haut), this.m_radiusX, this.m_radiusY);
+                dc.DrawEllipse(m_noir_Transparent, this.m_pen, new Point(gauche, mi_Hauteur), this.m_radiusX, this.m_radiusY);
+                dc.DrawEllipse(m_noir_Transparent, this.m_pen, new Point(droite, mi_Hauteur), this.m_radiusX, this.m_radiusY);
+                dc.DrawEllipse(m_noir_Transparent, this.m_pen, new Point(gauche, bas), this.m_radiusX, this.m_radiusY);
+                dc.DrawEllipse(m_noir_Transparent, this.m_pen, new Point(droite, bas), this.m_radiusX, this.m_radiusY);
 
 
 
-            dc.DrawText(GetAt(t_FormattedTexts, 0), new Point(gauche, haut));
-            dc.DrawText(GetAt(t_FormattedTexts, 1), new Point(droite, haut));
-            dc.DrawText(GetAt(t_FormattedTexts, 2), new Point(gauche, mi_Hauteur));
-            dc.DrawText(GetAt(t_FormattedTexts, 3), new Point(droite, mi_Hauteur));
-            dc.DrawText(GetAt(t_FormattedTexts, 4), new Point(gauche, bas));
-            dc.DrawText(GetAt(t_FormattedTexts, 5), new Point(droite, bas));
+                FormattedText[] t_FormattedTexts = this.LaListeDesCommandes.Select(GetFormattedText).ToArray();
 
+                haut = Y_DECALAGE_TEXT_VERS_BAS;
+                mi_Hauteur = (int)(zoneDessinRectangle.Height / 2 - Y_DECALAGE_TEXT_VERS_HAUT_02);
+                bas = (int)(zoneDessinRectangle.Height - Y_DECALAGE_TEXT_VERS_HAUT_03);
+                gauche = X_DECALAGE_TEXT_VERS_DROITE;
+                droite = (int)(zoneDessinRectangle.Width - X_DECALAGE_TEXT_VERS_GAUCHE);
 
+                //FormattedText s0 = GetAt(t_FormattedTexts, 0);
+                //FormattedText s5 = GetAt(t_FormattedTexts, 5);
 
+                dc.DrawText(GetAt(t_FormattedTexts, 0), new Point(gauche, haut));
+                dc.DrawText(GetAt(t_FormattedTexts, 1), new Point(droite, haut));
+                dc.DrawText(GetAt(t_FormattedTexts, 2), new Point(gauche, mi_Hauteur));
+                dc.DrawText(GetAt(t_FormattedTexts, 3), new Point(droite, mi_Hauteur));
+                dc.DrawText(GetAt(t_FormattedTexts, 4), new Point(gauche, bas));
+                dc.DrawText(GetAt(t_FormattedTexts, 5), new Point(droite, bas));
+
+            }
+            else
+            {
+                // ne pas afficher de bouton
+            }
 
             //Console.WriteLine(@" fin AddVisualInterface ");
         }
@@ -358,8 +368,6 @@ namespace Microsoft.Samples.Kinect.DepthBasics.WPF_Tools
 
             const int marge = 32;
 
-            ImageSource img = Get_Img_From_Bitmap(Resource1.hand_transparent);
-
             double xMax2 = xMax - marge;
 
             double yMax2 = yMax - marge;
@@ -374,7 +382,7 @@ namespace Microsoft.Samples.Kinect.DepthBasics.WPF_Tools
 
                 Rect rectangle = new Rect(pxy, new Size(25, 25));
 
-                dc.DrawImage(img, rectangle);
+                dc.DrawImage(m_hand_Transparent_Img, rectangle);
 
             }
             else
@@ -392,73 +400,92 @@ namespace Microsoft.Samples.Kinect.DepthBasics.WPF_Tools
         public void AddMainFermer(Point handPosition, DrawingContext dc, Rect zoneDessinRectangle)
         {
 
-            dc.DrawEllipse(GoHInterface.s_HandClosedBrush, null, handPosition, HAND_SIZE, HAND_SIZE);
-
-            Point pxy = new Point(handPosition.X - 12, handPosition.Y - 12);
-
-            Rect rectangle = new Rect(pxy, new Size(25, 25));
-            ImageSource img = Get_Img_From_Bitmap(Resource1.fist_transparent);
-
-            dc.DrawImage(img, rectangle);
-            
-            int haut = (int)(zoneDessinRectangle.Height * (1.0 / 3.0));
-            int bas = (int)(zoneDessinRectangle.Height * (2.0 / 3.0));
-
-            int milieu_X = (int)(zoneDessinRectangle.Width * (1.0 / 2.0));
-
-            //string msg;
-
-            //if (!(handPosition.X < (m_rectangle.Width / 2)))
-            //    msg = (handPosition.Y < (m_rectangle.Height / 2) ? "haut droite" : "bas droite");
-            //else
-            //    msg = (handPosition.Y < (m_rectangle.Height / 2) ? "haut gauche" : "bas gauche");
-
-
-            int num_Instruction = 0;
-            string msg_01;
-
-            if (handPosition.Y < haut)
+            try
             {
-                msg_01 = "haut";
-                num_Instruction += 0;
+
+                dc.DrawEllipse(GoHInterface.s_HandClosedBrush, null, handPosition, HAND_SIZE, HAND_SIZE);
+
+                Point pxy = new Point(handPosition.X - 12, handPosition.Y - 12);
+
+                Rect rectangle = new Rect(pxy, new Size(25, 25));
+
+                dc.DrawImage(m_fist_Transparent_Img, rectangle);
+
+                if (this.LaListeDesCommandes.Count >= 1)
+                {
+
+                    int haut = (int)(zoneDessinRectangle.Height * (1.0 / 3.0));
+                    int bas = (int)(zoneDessinRectangle.Height * (2.0 / 3.0));
+
+                    int milieu_X = (int)(zoneDessinRectangle.Width * (1.0 / 2.0));
+
+                    //string msg;
+
+                    //if (!(handPosition.X < (m_rectangle.Width / 2)))
+                    //    msg = (handPosition.Y < (m_rectangle.Height / 2) ? "haut droite" : "bas droite");
+                    //else
+                    //    msg = (handPosition.Y < (m_rectangle.Height / 2) ? "haut gauche" : "bas gauche");
+
+
+                    int num_Instruction = 0;
+                    string msg_01;
+
+                    if (handPosition.Y < haut)
+                    {
+                        msg_01 = "haut";
+                        num_Instruction += 0;
+                    }
+                    else if (handPosition.Y < bas)
+                    {
+                        msg_01 = "milieu";
+                        num_Instruction += 2;
+                    }
+                    else
+                    {
+                        msg_01 = "bas";
+                        num_Instruction += 4;
+                    }
+
+                    string msg_02 =
+                        (handPosition.X < milieu_X)
+                        ? "gauche"
+                        : "droite";
+
+                    num_Instruction +=
+                        (handPosition.X < milieu_X)
+                        ? 0
+                        : 1;
+
+                    string clickPositionString = msg_01 + " " + msg_02 + " click ";
+
+                    //Console.WriteLine(clickPositionString);
+
+                    string cmdTitle = GetAt(this.LaListeDesCommandes, num_Instruction);
+
+                    this.m_connection.ExecuteFromTitreCmd_And_Msg(cmdTitle, clickPositionString);
+
+
+                    //this.m_connection.Ecrire();
+
+                    //this.m_connection.Ecrire(msg + " R " + handPosition);
+
+                    //this.m_connection.Ecrire("R");
+
+                }
+                else
+                {
+                    // ne pas afficher
+                }
+
+                RefreshMenu();
+
             }
-            else if (handPosition.Y < bas)
+            catch (Exception e)
             {
-                msg_01 = "milieu";
-                num_Instruction += 2;
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine(e.ToString());
+                Console.ForegroundColor = ConsoleColor.Gray;
             }
-            else
-            {
-                msg_01 = "bas";
-                num_Instruction += 4;
-            }
-
-            string msg_02 =
-                (handPosition.X < milieu_X)
-                ? "gauche"
-                : "droite";
-
-            num_Instruction +=
-                (handPosition.X < milieu_X)
-                ? 0
-                : 1;
-
-            string clickPositionString = msg_01 + " " + msg_02 + " click ";
-
-            //Console.WriteLine(clickPositionString);
-
-            string cmdTitle = GetAt(this.LaListeDesCommandes, num_Instruction);
-
-            this.m_connection.ExecuteFromTitreCmd_And_Msg(cmdTitle, clickPositionString);
-
-
-            //this.m_connection.Ecrire();
-
-            //this.m_connection.Ecrire(msg + " R " + handPosition);
-
-            //this.m_connection.Ecrire("R");
-
-            RefreshMenu();
 
         }
 
@@ -472,13 +499,17 @@ namespace Microsoft.Samples.Kinect.DepthBasics.WPF_Tools
             Point pxy = new Point(handPosition.X - 12, handPosition.Y - 12);
 
             Rect rectangle = new Rect(pxy, new Size(25, 25));
-            ImageSource img = Get_Img_From_Bitmap(Resource1.fist_transparent);
 
-            dc.DrawImage(img, rectangle);
+            dc.DrawImage(m_fist_Transparent_Img, rectangle);
 
         }
 
         #endregion main
+
+        public BackgroundWorker GetBw()
+        {
+            return this.m_connection.GetBw();
+        }
 
     }
 }

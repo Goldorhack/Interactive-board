@@ -322,6 +322,10 @@ namespace Microsoft.Samples.Kinect.DepthBasics.Cs_Kinect.kinect_tools_dir
         /// </summary>
         public KinectTools(GoHInterface goHInterface)
         {
+
+            if (goHInterface == null)
+                throw new ArgumentNullException(nameof(goHInterface));
+
             this.m_goHInterface = goHInterface;
         }
 
@@ -342,32 +346,56 @@ namespace Microsoft.Samples.Kinect.DepthBasics.Cs_Kinect.kinect_tools_dir
         {
 
 
-            switch (handState)
+            try
             {
 
-                case HandState.Closed:
-                    drawingContext.DrawEllipse(this.m_handClosedBrush, null, handPosition, HAND_SIZE, HAND_SIZE);
 
-                    m_goHInterface.AddMainFermer(handPosition, drawingContext, this.m_rect);
+                switch (handState)
+                {
 
-                    break;
+                    case HandState.Closed:
+                        drawingContext.DrawEllipse(this.m_handClosedBrush, null, handPosition, HAND_SIZE, HAND_SIZE);
 
-                case HandState.Open:
-                    drawingContext.DrawEllipse(this.m_handOpenBrush, null, handPosition, HAND_SIZE, HAND_SIZE);
+                        m_goHInterface.AddMainFermer(handPosition, drawingContext, this.m_rect);
 
-                    m_goHInterface.AddMainOuverte(handPosition, drawingContext, this.m_displayWidth, this.m_displayHeight);
+                        break;
 
-                    break;
+                    case HandState.Open:
+                        drawingContext.DrawEllipse(this.m_handOpenBrush, null, handPosition, HAND_SIZE, HAND_SIZE);
 
-                case HandState.Lasso:
-                    drawingContext.DrawEllipse(this.m_handLassoBrush, null, handPosition, HAND_SIZE, HAND_SIZE);
+                        m_goHInterface.AddMainOuverte(handPosition, drawingContext, this.m_displayWidth, this.m_displayHeight);
 
-                    m_goHInterface.AddMainLasso(handPosition, drawingContext);
+                        break;
 
-                    break;
+                    case HandState.Lasso:
+                        drawingContext.DrawEllipse(this.m_handLassoBrush, null, handPosition, HAND_SIZE, HAND_SIZE);
+
+                        m_goHInterface.AddMainLasso(handPosition, drawingContext);
+
+                        break;
+
+                    case HandState.Unknown:
+
+                        m_goHInterface.AddMainLasso(handPosition, drawingContext);
+
+                        break;
+                    case HandState.NotTracked:
+
+                        m_goHInterface.AddMainLasso(handPosition, drawingContext);
+
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(handState), handState, null);
+                }
+
 
             }
-
+            catch (Exception e)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine(e.ToString());
+                Console.ForegroundColor = ConsoleColor.Gray;
+            }
 
 
         }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -46,52 +47,71 @@ namespace Microsoft.Samples.Kinect.BodyBasics.WPF
 
         private void Refresh()
         {
+
+            using (DrawingContext dc = this.m_drawingGroup.Open())
+            {
+                m_goHInterface.AddVisualInterface(dc, this.ZoneDessinRectangle);
+            }
+
             this.ImgMain.Source = this.ImageSource;
         }
 
         private void ImgMain_MouseMove(object sender, MouseEventArgs e)
         {
 
-            //Console.WriteLine(@" debut moseMove ");
-
-            UIElement element = sender as UIElement;
-
-            if (element != null)
+            try
             {
 
-                UIElement ele = element;
-
-                MouseDevice mouse = e.MouseDevice;
-                Point point = mouse.GetPosition(ele);
+                Refresh();
 
 
-                //Console.WriteLine(@" emouse.GetPosition : " + point);
+                //Console.WriteLine(@" debut moseMove ");
 
+                UIElement element = sender as UIElement;
 
-                using (DrawingContext dc = this.m_drawingGroup.Open())
+                if (element != null)
                 {
-                    m_goHInterface.AddVisualInterface(dc, this.ZoneDessinRectangle);
 
-                    if (mouse.LeftButton.Equals(MouseButtonState.Pressed))
+                    UIElement ele = element;
+
+                    MouseDevice mouse = e.MouseDevice;
+                    Point point = mouse.GetPosition(ele);
+
+
+                    //Console.WriteLine(@" emouse.GetPosition : " + point);
+
+
+                    using (DrawingContext dc = this.m_drawingGroup.Open())
                     {
-                        m_goHInterface.AddMainFermer(point, dc, this.ZoneDessinRectangle);
-                    }
-                    else
-                    {
-                        m_goHInterface.AddMainOuverte(point, dc, ImageSource.Width, ImageSource.Height);
+                        m_goHInterface.AddVisualInterface(dc, this.ZoneDessinRectangle);
+
+                        if (mouse.LeftButton.Equals(MouseButtonState.Pressed))
+                        {
+                            m_goHInterface.AddMainFermer(point, dc, this.ZoneDessinRectangle);
+                        }
+                        else
+                        {
+                            m_goHInterface.AddMainOuverte(point, dc, ImageSource.Width, ImageSource.Height);
+                        }
+
                     }
 
+                    this.ImgMain.Source = this.ImageSource;
                 }
+                else
+                {
+                    Console.WriteLine(@" element <=> null ");
+                }
+
+                //Console.WriteLine(@" fin mouseMove ");
+
             }
-            else
+            catch (Exception ex)
             {
-                Console.WriteLine(@" element <=> null ");
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine(ex.ToString());
+                Console.ForegroundColor = ConsoleColor.Gray;
             }
-
-            Refresh();
-
-
-            //Console.WriteLine(@" fin mouseMove ");
 
         }
 
@@ -117,7 +137,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics.WPF
 
             // Create an image source that we can use in our image control
             this.ImageSource = new DrawingImage(this.m_drawingGroup);
-            
+
             using (DrawingContext dc = this.m_drawingGroup.Open())
             {
                 m_goHInterface.AddVisualInterface(dc, this.ZoneDessinRectangle);
@@ -129,10 +149,30 @@ namespace Microsoft.Samples.Kinect.BodyBasics.WPF
             this.ImgMain.MouseDown += ImgMain_MouseMove;
             this.ImgMain.MouseUp += ImgMain_MouseMove;
 
+            BackgroundWorker bw = this.m_goHInterface.GetBw();
+
+            bw.RunWorkerCompleted += Bw_RunWorkerCompleted;
+
             mainWindow.Hide();
 
         }
-        
+
+        private void Bw_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            Console.WriteLine(@" Bw_RunWorkerCompleted ");
+            this.Refresh();
+        }
+
+        //public BackgroundWorker GetBw()
+        //{
+        //    if (this.m_goHInterface != null)
+        //    {
+        //        return this.m_goHInterface.GetBw();
+        //    }
+
+        //    return null;
+        //}
+
         ~FailOverWindow()
         {
             this.m_goHInterface.Dispose();
