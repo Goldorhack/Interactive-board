@@ -21,6 +21,7 @@ using Color = System.Windows.Media.Color;
 using Pen = System.Windows.Media.Pen;
 using Point = System.Windows.Point;
 using Size = System.Windows.Size;
+// ReSharper disable PossibleNullReferenceException
 
 // ReSharper disable once CheckNamespace
 namespace Microsoft.Samples.Kinect.DepthBasics.WPF_Tools
@@ -31,8 +32,11 @@ namespace Microsoft.Samples.Kinect.DepthBasics.WPF_Tools
 
         #region const
 
-        private const string CONFIG_FOLDER =
-            @"D:\felix_user\documents\_01_Codes_Sources_Felix\_02_Visual_Studio\Kinect\_01_Kinect_Project\_01_Config_Gold_Or_Hack\";
+        //private const string CONFIG_FOLDER =
+        //    @"D:\felix_user\documents\_01_Codes_Sources_Felix\_02_Visual_Studio\Kinect\_01_Kinect_Project\_01_Config_Gold_Or_Hack\";
+
+        //private const string CONFIG_FOLDER =
+        //    @"..\..\..\";
 
         private const string CONFIG_NAME = @"config.txt";
 
@@ -118,6 +122,9 @@ namespace Microsoft.Samples.Kinect.DepthBasics.WPF_Tools
         private readonly SolidColorBrush m_noir_Transparent;
         private readonly ImageSource m_hand_Transparent_Img;
         private readonly ImageSource m_fist_Transparent_Img;
+        private BackgroundWorker m_bw;
+
+        //private event refreshEvent ;
 
         public ConcurrentBag<string> LaListeDesCommandes { get; set; }
 
@@ -174,7 +181,7 @@ namespace Microsoft.Samples.Kinect.DepthBasics.WPF_Tools
             catch (Exception ex)
             {
                 Outil.Ecrire_Erreur(ex);
-                
+
                 throw;
             }
 
@@ -187,14 +194,25 @@ namespace Microsoft.Samples.Kinect.DepthBasics.WPF_Tools
             try
             {
 
+
+                Assembly assembly = Assembly.GetEntryAssembly();
+
+                if (assembly == null)
+                    throw new Exception(" assembly == null ");
+
+                string codeBase = assembly.CodeBase;
+
+                DirectoryInfo exeFolder_Di = new FileInfo(new Uri(codeBase).LocalPath).Directory;
+
+                FileInfo fi_02 = new FileInfo(exeFolder_Di.Parent.Parent.Parent.FullName + @"\" + CONFIG_NAME);
+
                 if (File.Exists(CONFIG_NAME))
                 {
                     filePath = CONFIG_NAME;
-
                 }
-                else if (File.Exists(CONFIG_FOLDER + CONFIG_NAME))
+                else if (fi_02.Exists)
                 {
-                    filePath = CONFIG_FOLDER + CONFIG_NAME;
+                    filePath = fi_02.FullName;
                 }
                 else
                 {
@@ -397,7 +415,7 @@ namespace Microsoft.Samples.Kinect.DepthBasics.WPF_Tools
             AddMainOuverte(handPosition, dc, (int)xMax, (int)yMax);
         }
 
-        public void AddMainFermer(Point handPosition, DrawingContext dc, Rect zoneDessinRectangle)
+        public BackgroundWorker AddMainFermer(Point handPosition, DrawingContext dc, Rect zoneDessinRectangle)
         {
 
             try
@@ -462,8 +480,9 @@ namespace Microsoft.Samples.Kinect.DepthBasics.WPF_Tools
 
                     string cmdTitle = GetAt(this.LaListeDesCommandes, num_Instruction);
 
-                    this.m_connection.ExecuteFromTitreCmd_And_Msg(cmdTitle, clickPositionString);
+                    this.m_bw = this.m_connection.ExecuteFromTitreCmd_And_Msg(cmdTitle, clickPositionString);
 
+                    m_bw.RunWorkerCompleted += M_bw_RunWorkerCompleted;
 
                     //this.m_connection.Ecrire();
 
@@ -486,7 +505,13 @@ namespace Microsoft.Samples.Kinect.DepthBasics.WPF_Tools
                 Console.WriteLine(e.ToString());
                 Console.ForegroundColor = ConsoleColor.Gray;
             }
+            
+            return this.m_bw;
+        }
 
+        private void M_bw_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            RefreshMenu();
         }
 
         public void AddMainLasso(Point handPosition, DrawingContext dc)
@@ -506,10 +531,10 @@ namespace Microsoft.Samples.Kinect.DepthBasics.WPF_Tools
 
         #endregion main
 
-        public BackgroundWorker GetBw()
-        {
-            return this.m_connection.GetBw();
-        }
+        //public BackgroundWorker GetBw()
+        //{
+        //    return this.m_connection.GetBw();
+        //}
 
     }
 }

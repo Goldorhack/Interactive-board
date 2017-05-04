@@ -1,0 +1,10 @@
+pihat
+pi
+crbdgc
+
+1 - ip
+2 - username
+3 - pass
+
+HOSTNAME_OR_IP = "azuril.ddns.net";
+USERNAME = "tyrix";

@@ -41,6 +41,8 @@ namespace Microsoft.Samples.Kinect.BodyBasics.WPF
         /// Drawing group for body rendering output
         /// </summary>
         private readonly DrawingGroup m_drawingGroup;
+
+        private BackgroundWorker m_bw;
         //private readonly MainWindow m_mainWindow;
 
         public Rect ZoneDessinRectangle { get; set; }
@@ -87,7 +89,8 @@ namespace Microsoft.Samples.Kinect.BodyBasics.WPF
 
                         if (mouse.LeftButton.Equals(MouseButtonState.Pressed))
                         {
-                            m_goHInterface.AddMainFermer(point, dc, this.ZoneDessinRectangle);
+                            this.m_bw = m_goHInterface.AddMainFermer(point, dc, this.ZoneDessinRectangle);
+                            this.m_bw.RunWorkerCompleted += Bw_RunWorkerCompleted;
                         }
                         else
                         {
@@ -148,11 +151,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics.WPF
             this.ImgMain.MouseMove += ImgMain_MouseMove;
             this.ImgMain.MouseDown += ImgMain_MouseMove;
             this.ImgMain.MouseUp += ImgMain_MouseMove;
-
-            BackgroundWorker bw = this.m_goHInterface.GetBw();
-
-            bw.RunWorkerCompleted += Bw_RunWorkerCompleted;
-
+            
             mainWindow.Hide();
 
         }
